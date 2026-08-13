@@ -5,6 +5,14 @@
         <h1 class="h3 mb-0">Campaigns</h1>
         <span class="badge text-bg-secondary">{{ auth()->user()->getRoleNames()->implode(', ') }}</span>
     </div>
+    <div class="card mb-3"><div class="card-body">
+        <h2 class="h5">Redeem voucher</h2>
+        <form class="row g-2" method="POST" action="{{ route('admin.vouchers.redeem') }}">
+            @csrf
+            <div class="col-md-9"><label class="visually-hidden" for="voucher-code">Voucher code</label><input class="form-control" id="voucher-code" name="code" value="{{ old('code') }}" placeholder="Voucher code" required></div>
+            <div class="col-md-3"><button class="btn btn-warning w-100">Redeem voucher</button></div>
+        </form>
+    </div></div>
     @role('admin')
         <div class="card mb-3"><div class="card-body">
             <h2 class="h5">Create campaign</h2>

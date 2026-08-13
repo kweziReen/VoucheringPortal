@@ -73,6 +73,16 @@ test('redeeming a voucher twice returns a conflict and creates one redemption', 
     expect(Redemption::query()->where('voucher_id', $voucher->id)->count())->toBe(1);
 });
 
+test('an unissued voucher cannot be redeemed', function (): void {
+    $voucher = Voucher::factory()->create(['issued_at' => null, 'redeemed_at' => null]);
+
+    $this->postJson("/api/v1/vouchers/{$voucher->code}/redeem")
+        ->assertConflict()
+        ->assertJsonPath('message', 'Voucher has not been issued.');
+
+    expect(Redemption::query()->where('voucher_id', $voucher->id)->exists())->toBeFalse();
+});
+
 test('public validation does not require authentication', function (): void {
     $voucher = Voucher::factory()->create();
     $this->app['auth']->forgetGuards();

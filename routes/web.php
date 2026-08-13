@@ -16,6 +16,7 @@ Route::post('logout', [AdminLoginController::class, 'destroy'])->middleware('aut
 
 Route::middleware(['auth', 'role:admin|viewer'])->prefix('admin')->name('admin.')->group(function (): void {
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::post('vouchers/redeem', [AdminDashboardController::class, 'redeem'])->name('vouchers.redeem');
     Route::post('campaigns', [AdminDashboardController::class, 'storeCampaign'])
         ->middleware('role:admin')
         ->name('campaigns.store');

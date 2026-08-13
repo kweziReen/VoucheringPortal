@@ -3,10 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Redemption;
-use App\Models\Voucher;
+use App\Services\VoucherRedeemer;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
 use Throwable;
 
 class VoucherRedemptionController extends Controller
@@ -14,34 +12,9 @@ class VoucherRedemptionController extends Controller
     /**
      * @throws Throwable
      */
-    public function __invoke(string $code): JsonResponse
+    public function __invoke(string $code, VoucherRedeemer $voucherRedeemer): JsonResponse
     {
-        $result = DB::transaction(function () use ($code): array {
-            $redeemedAt = now();
-
-            $updated = Voucher::query()
-                ->where('code', $code)
-                ->whereNull('redeemed_at')
-                ->update([
-                    'redeemed_at' => $redeemedAt,
-                    'updated_at' => $redeemedAt,
-                ]);
-
-            if ($updated === 0) {
-                return [
-                    'status' => Voucher::query()->where('code', $code)->exists() ? 'already_redeemed' : 'not_found',
-                ];
-            }
-
-            $voucher = Voucher::query()->where('code', $code)->firstOrFail();
-
-            Redemption::query()->create([
-                'voucher_id' => $voucher->id,
-                'redeemed_at' => $redeemedAt,
-            ]);
-
-            return ['status' => 'redeemed', 'voucher' => $voucher];
-        });
+        $result = $voucherRedeemer->redeem($code);
 
         return match ($result['status']) {
             'redeemed' => response()->json([
@@ -50,6 +23,7 @@ class VoucherRedemptionController extends Controller
                 'redeemed_at' => $result['voucher']->redeemed_at?->toISOString(),
             ]),
             'already_redeemed' => response()->json(['message' => 'Voucher has already been redeemed.'], 409),
+            'not_issued' => response()->json(['message' => 'Voucher has not been issued.'], 409),
             default => response()->json(['message' => 'Voucher not found.'], 404),
         };
     }

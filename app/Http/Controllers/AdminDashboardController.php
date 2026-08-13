@@ -7,6 +7,7 @@ use App\Jobs\SendVoucherSmsJob;
 use App\Models\Campaign;
 use App\Models\Voucher;
 use App\Services\VoucherIssuer;
+use App\Services\VoucherRedeemer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -74,5 +75,21 @@ class AdminDashboardController extends Controller
         SendVoucherSmsJob::dispatch($result['voucher']);
 
         return back()->with('status', "Voucher {$result['voucher']->code} was issued and queued for SMS delivery.");
+    }
+
+    public function redeem(Request $request, VoucherRedeemer $voucherRedeemer): RedirectResponse
+    {
+        $validated = $request->validate(['code' => ['required', 'string', 'max:255']]);
+        $result = $voucherRedeemer->redeem($validated['code']);
+
+        if ($result['status'] !== 'redeemed') {
+            $message = $result['status'] === 'already_redeemed'
+                ? 'Voucher has already been redeemed.'
+                : ($result['status'] === 'not_issued' ? 'Voucher has not been issued.' : 'Voucher not found.');
+
+            return back()->withErrors(['code' => $message]);
+        }
+
+        return back()->with('status', "Voucher {$result['voucher']->code} was redeemed successfully.");
     }
 }
