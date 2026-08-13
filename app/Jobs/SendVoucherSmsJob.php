@@ -49,6 +49,12 @@ class SendVoucherSmsJob implements ShouldQueue
         $this->broadcastStatus('sent');
     }
 
+    /** Called by Laravel once all retry attempts have been exhausted. */
+    public function failed(?Throwable $exception): void
+    {
+        $this->broadcastStatus('failed');
+    }
+
     private function broadcastStatus(string $status): void
     {
         event(new VoucherIssued(

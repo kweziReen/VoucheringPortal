@@ -6,6 +6,7 @@ use App\Models\Voucher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 
 uses(RefreshDatabase::class);
@@ -29,14 +30,20 @@ test('a fake SMS timeout fails the attempt so the worker retries it', function (
 
 });
 
-test('a 5xx fake SMS response fails the attempt so the worker retries it', function (): void {
-    Http::fake([config('sms.fake.endpoint') => Http::response(['message' => 'provider unavailable'], 503)]);
+test('a 5xx sequence fails retry attempts and succeeds on a later attempt', function (): void {
+    Event::fake();
+    Http::fakeSequence()
+        ->push(['message' => 'provider unavailable'], 503)
+        ->push(['message' => 'provider unavailable'], 503)
+        ->push([], 202);
     $job = new SendVoucherSmsJob(Voucher::factory()->create());
 
     expect(fn () => $job->handle(app(SmsService::class)))->toThrow(RequestException::class);
+    expect(fn () => $job->handle(app(SmsService::class)))->toThrow(RequestException::class);
+    $job->handle(app(SmsService::class));
     expect($job->backoff())->toBe([5, 30, 120]);
 
-    Http::assertSent(fn ($request) => $request->url() === config('sms.fake.endpoint'));
+    Http::assertSentCount(3);
 });
 
 test('a hanging fake endpoint is bounded by the client and job timeout configuration', function (): void {
