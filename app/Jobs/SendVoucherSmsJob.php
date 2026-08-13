@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Contracts\SmsService;
+use App\Events\VoucherIssued;
 use App\Models\Voucher;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -43,5 +44,22 @@ class SendVoucherSmsJob implements ShouldQueue
         }
 
         $sms->send($msisdn, "Your voucher code is {$this->voucher->code}.");
+
+        $this->broadcastStatus('sent');
+    }
+
+    public function failed(?\Throwable $exception): void
+    {
+        $this->broadcastStatus('failed');
+    }
+
+    private function broadcastStatus(string $status): void
+    {
+        event(new VoucherIssued(
+            voucherCode: $this->voucher->code,
+            campaignId: $this->voucher->campaign_id,
+            issuedAt: $this->voucher->issued_at ?? now(),
+            smsStatus: $status,
+        ));
     }
 }
