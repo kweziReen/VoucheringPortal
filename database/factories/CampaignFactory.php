@@ -1,0 +1,20 @@
+<?php
+
+namespace Database\Factories;
+
+use App\Models\Campaign;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+/** @extends Factory<Campaign> */
+class CampaignFactory extends Factory
+{
+    protected $model = Campaign::class;
+
+    public function definition(): array
+    {
+        return [
+            'name' => fake()->unique()->words(3, true),
+            'msisdn_cap' => fake()->numberBetween(1, 10),
+        ];
+    }
+}
