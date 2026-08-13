@@ -1,16 +1,19 @@
 <?php
 
+use App\Jobs\SendVoucherSmsJob;
 use App\Models\Campaign;
 use App\Models\Redemption;
 use App\Models\User;
 use App\Models\Voucher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     Sanctum::actingAs(User::factory()->create());
+    Queue::fake();
 });
 
 test('competing issue calls for the final voucher allow only one claim', function (): void {
@@ -33,6 +36,7 @@ test('competing issue calls for the final voucher allow only one claim', functio
     $first->assertCreated()->assertJsonPath('code', $voucher->code);
     $second->assertConflict();
     expect(Voucher::query()->whereNotNull('issued_at')->count())->toBe(1);
+    Queue::assertPushed(SendVoucherSmsJob::class, 1);
 });
 
 test('the campaign cap is enforced for a normalised MSISDN', function (): void {

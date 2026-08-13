@@ -5,6 +5,17 @@
         <h1 class="h3 mb-0">Campaigns</h1>
         <span class="badge text-bg-secondary">{{ auth()->user()->getRoleNames()->implode(', ') }}</span>
     </div>
+    @role('admin')
+        <div class="card mb-3"><div class="card-body">
+            <h2 class="h5">Create campaign</h2>
+            <form class="row g-2" method="POST" action="{{ route('admin.campaigns.store') }}">
+                @csrf
+                <div class="col-md-7"><label class="visually-hidden" for="campaign-name">Name</label><input class="form-control @error('name') is-invalid @enderror" id="campaign-name" name="name" value="{{ old('name') }}" placeholder="Campaign name" required>@error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+                <div class="col-md-3"><label class="visually-hidden" for="msisdn-cap">MSISDN cap</label><input class="form-control @error('msisdn_cap') is-invalid @enderror" id="msisdn-cap" name="msisdn_cap" type="number" value="{{ old('msisdn_cap', 1) }}" min="1" placeholder="MSISDN cap" required>@error('msisdn_cap')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+                <div class="col-md-2"><button class="btn btn-primary w-100">Create campaign</button></div>
+            </form>
+        </div></div>
+    @endrole
     <form class="row g-2 mb-3" method="GET" action="{{ route('admin.dashboard') }}">
         <div class="col-sm-5"><input class="form-control" name="campaign_search" value="{{ $campaignSearch }}" placeholder="Search campaigns"></div>
         <div class="col-auto"><button class="btn btn-outline-primary">Search</button></div>

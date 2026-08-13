@@ -7,9 +7,13 @@ use App\Models\Redemption;
 use App\Models\Voucher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class VoucherRedemptionController extends Controller
 {
+    /**
+     * @throws Throwable
+     */
     public function __invoke(string $code): JsonResponse
     {
         $result = DB::transaction(function () use ($code): array {

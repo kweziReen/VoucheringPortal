@@ -3,14 +3,19 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendVoucherSmsJob;
 use App\Models\Campaign;
 use App\Models\Voucher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class VoucherIssueController extends Controller
 {
+    /**
+     * @throws Throwable
+     */
     public function __invoke(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -77,6 +82,10 @@ class VoucherIssueController extends Controller
                 'voucher' => Voucher::query()->where('code', $code)->firstOrFail(),
             ];
         });
+
+        if ($result['status'] === 'issued') {
+            SendVoucherSmsJob::dispatch($result['voucher']);
+        }
 
         return match ($result['status']) {
             'issued' => response()->json($this->voucherPayload($result['voucher']), 201),

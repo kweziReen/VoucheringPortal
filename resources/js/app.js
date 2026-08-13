@@ -19,7 +19,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.Echo.private('admin.vouchers').listen('.voucher.issued', (event) => {
         const row = document.createElement('tr');
-        [event.voucher_code, event.campaign_id, event.sms_status, event.issued_at, '—'].forEach((value) => {
+        [event.voucher_code, `Campaign #${event.campaign_id}`].forEach((value) => {
+            const cell = document.createElement('td');
+            cell.textContent = value;
+            row.appendChild(cell);
+        });
+
+        const statusCell = document.createElement('td');
+        const badge = document.createElement('span');
+        const isSent = event.sms_status === 'sent';
+        badge.className = `badge text-bg-${isSent ? 'success' : 'danger'}`;
+        badge.textContent = isSent ? 'SMS sent' : 'SMS failed';
+        statusCell.appendChild(badge);
+        row.appendChild(statusCell);
+
+        [event.issued_at, '—'].forEach((value) => {
             const cell = document.createElement('td');
             cell.textContent = value;
             row.appendChild(cell);

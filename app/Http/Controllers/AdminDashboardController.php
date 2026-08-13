@@ -41,4 +41,16 @@ class AdminDashboardController extends Controller
 
         return back()->with('status', "Generation of {$validated['quantity']} vouchers has been queued.");
     }
+
+    public function storeCampaign(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'msisdn_cap' => ['required', 'integer', 'min:1'],
+        ]);
+
+        Campaign::query()->create($validated);
+
+        return back()->with('status', 'Campaign created successfully.');
+    }
 }

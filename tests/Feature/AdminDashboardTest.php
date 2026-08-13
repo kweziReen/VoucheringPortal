@@ -36,3 +36,17 @@ test('an admin can queue a bulk voucher generation job', function (): void {
     Queue::assertPushed(GenerateVouchersJob::class, fn (GenerateVouchersJob $job) => $job->campaignId === $campaign->id
         && $job->quantity === 100);
 });
+
+test('an admin can create a campaign while a viewer cannot', function (): void {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $this->actingAs($admin)->post('/admin/campaigns', ['name' => 'Summer vouchers', 'msisdn_cap' => 3])
+        ->assertRedirect();
+    $this->assertDatabaseHas('campaigns', ['name' => 'Summer vouchers', 'msisdn_cap' => 3]);
+
+    $viewer = User::factory()->create();
+    $viewer->assignRole('viewer');
+    $this->actingAs($viewer)->post('/admin/campaigns', ['name' => 'Blocked campaign', 'msisdn_cap' => 1])
+        ->assertForbidden();
+});
