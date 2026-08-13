@@ -9,6 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Throwable;
 
 class SendVoucherSmsJob implements ShouldQueue
 {
@@ -46,11 +47,6 @@ class SendVoucherSmsJob implements ShouldQueue
         $sms->send($msisdn, "Your voucher code is {$this->voucher->code}.");
 
         $this->broadcastStatus('sent');
-    }
-
-    public function failed(?\Throwable $exception): void
-    {
-        $this->broadcastStatus('failed');
     }
 
     private function broadcastStatus(string $status): void

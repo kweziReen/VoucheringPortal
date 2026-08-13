@@ -22,4 +22,7 @@ Route::middleware(['auth', 'role:admin|viewer'])->prefix('admin')->name('admin.'
     Route::post('campaigns/{campaign}/vouchers', [AdminDashboardController::class, 'generate'])
         ->middleware('role:admin')
         ->name('campaigns.vouchers.generate');
+    Route::post('campaigns/{campaign}/issue', [AdminDashboardController::class, 'issue'])
+        ->middleware('role:admin')
+        ->name('campaigns.vouchers.issue');
 });

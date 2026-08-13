@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\GenerateVouchersJob;
+use App\Jobs\SendVoucherSmsJob;
 use App\Models\Campaign;
 use App\Models\Voucher;
+use App\Services\VoucherIssuer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -52,5 +54,25 @@ class AdminDashboardController extends Controller
         Campaign::query()->create($validated);
 
         return back()->with('status', 'Campaign created successfully.');
+    }
+
+    public function issue(Request $request, Campaign $campaign, VoucherIssuer $voucherIssuer): RedirectResponse
+    {
+        $validated = $request->validate(['msisdn' => ['required', 'string', 'min:3', 'max:32']]);
+        $result = $voucherIssuer->issue($campaign->id, $validated['msisdn']);
+
+        if ($result['status'] !== 'issued') {
+            $message = match ($result['status']) {
+                'cap_reached' => 'This MSISDN has reached the campaign cap.',
+                'unavailable' => 'No vouchers are available for this campaign.',
+                default => 'The MSISDN is invalid.',
+            };
+
+            return back()->withErrors(['msisdn' => $message]);
+        }
+
+        SendVoucherSmsJob::dispatch($result['voucher']);
+
+        return back()->with('status', "Voucher {$result['voucher']->code} was issued and queued for SMS delivery.");
     }
 }

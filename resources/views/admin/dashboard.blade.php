@@ -25,11 +25,18 @@
         @forelse ($campaigns as $campaign)
             <tr><td>{{ $campaign->name }}</td><td>{{ $campaign->msisdn_cap }}</td><td class="text-end">
                 @role('admin')
-                    <form class="d-inline-flex gap-2" method="POST" action="{{ route('admin.campaigns.vouchers.generate', $campaign) }}">
-                        @csrf
-                        <input class="form-control form-control-sm" type="number" name="quantity" value="1000" min="1" max="100000" aria-label="Number of vouchers">
-                        <button class="btn btn-sm btn-primary">Generate N Vouchers</button>
-                    </form>
+                    <div class="d-inline-flex flex-wrap justify-content-end gap-2">
+                        <form class="d-inline-flex gap-2" method="POST" action="{{ route('admin.campaigns.vouchers.issue', $campaign) }}">
+                            @csrf
+                            <input class="form-control form-control-sm" type="text" name="msisdn" placeholder="MSISDN" aria-label="MSISDN" required>
+                            <button class="btn btn-sm btn-success">Issue voucher</button>
+                        </form>
+                        <form class="d-inline-flex gap-2" method="POST" action="{{ route('admin.campaigns.vouchers.generate', $campaign) }}">
+                            @csrf
+                            <input class="form-control form-control-sm" type="number" name="quantity" value="1000" min="1" max="100000" aria-label="Number of vouchers">
+                            <button class="btn btn-sm btn-primary">Generate N Vouchers</button>
+                        </form>
+                    </div>
                 @else<span class="text-muted small">Read only</span>@endrole
             </td></tr>
         @empty<tr><td colspan="3" class="text-center text-muted py-4">No campaigns found.</td></tr>@endforelse
